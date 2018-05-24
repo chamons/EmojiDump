@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
-using QuickType;
 using System.Linq;
+using System.Xml;
 
 namespace emojiDump
 {
@@ -12,17 +11,18 @@ namespace emojiDump
 		public static void Main (string[] args)
 		{
 			if (args.Length != 1 || !File.Exists (args[0])) {
-				Console.WriteLine ("mono emojiDump.exe emoji.json");
+				Console.WriteLine ("mono emojiDump.exe en.xml");
 				System.Environment.Exit (1);
 			}
 
-			var emoji = Emoji.FromJson (File.ReadAllText (args[0]));
+			XmlDocument doc = new XmlDocument ();
+			doc.Load (args[0]);
 
 			Console.WriteLine ("static KeyValuePair<char, string>[] cannedPairs = new KeyValuePair<char, string>[] {");
-			foreach (var e in emoji.Where (x => !string.IsNullOrWhiteSpace (x.EmojiEmoji)))
-			{
-				Console.WriteLine ($"new KeyValuePair<char, string> ('{e.EmojiEmoji}', \"{e.Description}\")");
-			}
+
+			foreach (XmlNode n in doc.SelectNodes ("/ldml/annotations/*"))
+				Console.WriteLine ($"new KeyValuePair<char, string> ('{n.Attributes[0].Value}', \"{n.InnerText}\")");
+
 			Console.WriteLine ("};");
 		}
 	}
